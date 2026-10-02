@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { FRAME_COUNT, preloadFrames } from "@/lib/frames";
+import { useEffect, useRef } from "react";
+import { FRAME_COUNT, startLoading } from "@/lib/frames";
 import { SITE } from "@/lib/data";
-import Preloader from "./Preloader";
 
 /* ---- Scroll phases (track ke andar 0..1 progress) ---- */
 const FRAMES_END = 0.75; // 0–75%  : frames play
@@ -37,10 +36,7 @@ const reveal = (el: HTMLElement | null, t: number) => {
 };
 
 export default function ScrollStory() {
-  // State sirf loading ke liye. Scroll ke liye koi state nahi — sab refs + rAF.
-  const [loaded, setLoaded] = useState(0);
-  const [ready, setReady] = useState(false);
-
+  // Koi state nahi — scroll aur loading dono refs + rAF se chalte hain.
   const trackRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -49,50 +45,37 @@ export default function ScrollStory() {
   const nameRef = useRef<HTMLHeadingElement>(null);
   const tagRef = useRef<HTMLParagraphElement>(null);
   const hintRef = useRef<HTMLDivElement>(null);
-  const framesRef = useRef<HTMLImageElement[]>([]);
 
-  // 1) Frames preload
   useEffect(() => {
-    let alive = true;
-    preloadFrames(setLoaded).then((frames) => {
-      if (!alive) return;
-      framesRef.current = frames;
-      setReady(true);
-    });
-    return () => { alive = false; };
-  }, []);
-
-  // 2) Loading ke dauran scroll lock
-  useEffect(() => {
-    document.body.style.overflow = ready ? "" : "hidden";
-    return () => { document.body.style.overflow = ""; };
-  }, [ready]);
-
-  // 3) Canvas + scroll engine
-  useEffect(() => {
-    if (!ready) return;
     const canvas = canvasRef.current!;
     const track = trackRef.current!;
     const stage = stageRef.current!;
     const ctx = canvas.getContext("2d")!;
+    const frames: (HTMLImageElement | undefined)[] = new Array(FRAME_COUNT);
 
-    let trackTop = 0, range = 1;      // cached layout (scroll pe layout read nahi karte)
-    let target = 0, current = 0;      // target = asli progress, current = smoothed
-    let raf = 0, lastFrame = -1;
+    let trackTop = 0, range = 1;   // cached layout (scroll pe layout read nahi karte)
+    let target = 0, current = 0;   // target = asli progress, current = smoothed
+    let raf = 0, wanted = 0, drawn = -1;
+
+    // Jo frame chahiye wo load nahi hua to sabse kareeb ka pehle wala frame dikhao
+    const nearest = (i: number) => { for (let k = i; k >= 0; k--) if (frames[k]) return k; return -1; };
 
     // "Cover" fit: image poori screen bhare, bina stretch ke (center crop)
-    const drawFrame = (i: number) => {
-      const img = framesRef.current[i];
-      if (!img || !img.naturalWidth) return;
+    const paint = () => {
+      const k = nearest(wanted);
+      if (k < 0 || k === drawn) return;
+      const img = frames[k]!;
       const s = Math.max(canvas.width / img.naturalWidth, canvas.height / img.naturalHeight);
       const w = img.naturalWidth * s, h = img.naturalHeight * s;
       ctx.drawImage(img, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+      drawn = k;
+      canvas.style.opacity = "1"; // pehla frame aate hi soft fade-in (koi loader nahi)
     };
 
     const render = (p: number) => {
       // Phase 1: frame index
-      const idx = Math.min(FRAME_COUNT - 1, Math.round(clamp(p / FRAMES_END) * (FRAME_COUNT - 1)));
-      if (idx !== lastFrame) { drawFrame(idx); lastFrame = idx; }
+      wanted = Math.min(FRAME_COUNT - 1, Math.round(clamp(p / FRAMES_END) * (FRAME_COUNT - 1)));
+      paint();
 
       // Phase 2: circles 0 -> 1500px. Overlap hote hi black circles merge ho jaate hain.
       const c = clamp((p - FRAMES_END) / (CIRCLES_END - FRAMES_END));
@@ -112,7 +95,7 @@ export default function ScrollStory() {
 
     const progress = () => clamp((window.scrollY - trackTop) / range);
 
-    // Resize: DPR ke hisaab se canvas buffer — sharp on retina (2x cap for perf)
+    // Resize: DPR ke hisaab se canvas buffer — retina pe sharp (perf ke liye 2x cap)
     const measure = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = Math.round(canvas.clientWidth * dpr);
@@ -122,7 +105,7 @@ export default function ScrollStory() {
       trackTop = track.offsetTop;
       range = Math.max(1, track.offsetHeight - stage.clientHeight);
       target = current = progress();
-      lastFrame = -1;
+      drawn = -1;
       render(current);
     };
 
@@ -139,55 +122,53 @@ export default function ScrollStory() {
     };
 
     measure();
+    const stopLoading = startLoading(frames, paint); // background me, bina rukawat
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", measure);
     return () => {
+      stopLoading();
       cancelAnimationFrame(raf);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", measure);
     };
-  }, [ready]);
+  }, []);
 
   return (
-    <>
-      <Preloader progress={loaded} done={ready} />
+    // Tall track = scroll distance. Isko chhota/bada karke speed control karo.
+    <div ref={trackRef} className="relative h-[700vh]">
+      <div ref={stageRef} className="sticky top-0 h-svh w-full overflow-hidden bg-black">
+        <canvas ref={canvasRef} className="absolute inset-0 h-full w-full opacity-0 transition-opacity duration-500" />
 
-      {/* Tall track = scroll distance. Isko chhota/bada karke speed control karo. */}
-      <div ref={trackRef} className="relative h-[700vh]">
-        <div ref={stageRef} className="sticky top-0 h-svh w-full overflow-hidden bg-black">
-          <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
+        {CIRCLES.map((c, i) => (
+          <div
+            key={i}
+            ref={(el) => { circleRefs.current[i] = el; }}
+            className="absolute rounded-full bg-black will-change-transform"
+            style={{
+              left: `${c.x}%`, top: `${c.y}%`,
+              width: CIRCLE_SIZE, height: CIRCLE_SIZE,
+              transform: "translate(-50%,-50%) scale(0)",
+            }}
+          />
+        ))}
+        <div ref={overlayRef} className="absolute inset-0 bg-black opacity-0" />
 
-          {CIRCLES.map((c, i) => (
-            <div
-              key={i}
-              ref={(el) => { circleRefs.current[i] = el; }}
-              className="absolute rounded-full bg-black will-change-transform"
-              style={{
-                left: `${c.x}%`, top: `${c.y}%`,
-                width: CIRCLE_SIZE, height: CIRCLE_SIZE,
-                transform: "translate(-50%,-50%) scale(0)",
-              }}
-            />
-          ))}
-          <div ref={overlayRef} className="absolute inset-0 bg-black opacity-0" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
+          <h1
+            ref={nameRef}
+            className="text-[clamp(2.75rem,11vw,9rem)] font-extrabold leading-none tracking-tight opacity-0"
+          >
+            {SITE.name}
+          </h1>
+          <p ref={tagRef} className="mt-8 max-w-3xl text-xs tracking-[0.25em] text-white/60 opacity-0 md:text-sm">
+            {SITE.tagline}
+          </p>
+        </div>
 
-          <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
-            <h1
-              ref={nameRef}
-              className="text-[clamp(2.75rem,11vw,9rem)] font-extrabold leading-none tracking-tight opacity-0"
-            >
-              {SITE.name}
-            </h1>
-            <p ref={tagRef} className="mt-8 max-w-3xl text-xs tracking-[0.25em] text-white/60 opacity-0 md:text-sm">
-              {SITE.tagline}
-            </p>
-          </div>
-
-          <div ref={hintRef} className="absolute bottom-8 left-1/2 -translate-x-1/2 text-xs tracking-[0.3em] text-white/70">
-            Scroll to explore
-          </div>
+        <div ref={hintRef} className="absolute bottom-8 left-1/2 -translate-x-1/2 text-xs tracking-[0.3em] text-white/70">
+          Scroll to explore
         </div>
       </div>
-    </>
+    </div>
   );
 }
