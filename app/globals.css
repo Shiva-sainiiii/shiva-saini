@@ -7,3 +7,9 @@ html, body { background: #000; color: #fff; -webkit-font-smoothing: antialiased;
 
 /* Reduced-motion walon ke liye extra smoothing band */
 @media (prefers-reduced-motion: reduce) { * { transition-duration: 0s !important; } }
+
+/* Skills marquee: 8 copies, -50% = seamless loop. Hover pe pause. */
+@keyframes marquee { to { transform: translateX(-50%); } }
+.marquee { animation: marquee 45s linear infinite; }
+.marquee:hover { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) { .marquee { animation: none; } }
