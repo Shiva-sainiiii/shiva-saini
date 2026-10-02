@@ -10,6 +10,11 @@ const CIRCLES_END = 0.9; // 75–90% : circles grow -> full black. 90%+ : naam r
 const CIRCLE_COUNT = 12;
 const CIRCLE_SIZE = 1500; // px, scale 1 pe diameter
 
+// SPEED KNOB: track jitna chhota, utna kam scroll me saare frames chalte hain.
+// 700 = bahut slow, 350 = fast (default), 250 = ekdum fast. Total scroll = TRACK_VH - 100vh.
+const TRACK_VH = 350;
+const SMOOTHING = 0.16; // 0.1 = dheere/silky, 0.25 = turant response
+
 const clamp = (v: number, min = 0, max = 1) => Math.min(max, Math.max(min, v));
 const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
 
@@ -111,7 +116,7 @@ export default function ScrollStory() {
 
     // Lerp loop: sirf tab chalta hai jab current != target (idle me 0% CPU)
     const tick = () => {
-      current += (target - current) * 0.12;
+      current += (target - current) * SMOOTHING;
       if (Math.abs(target - current) < 0.0003) current = target;
       render(current);
       raf = current !== target ? requestAnimationFrame(tick) : 0;
@@ -135,7 +140,7 @@ export default function ScrollStory() {
 
   return (
     // Tall track = scroll distance. Isko chhota/bada karke speed control karo.
-    <div ref={trackRef} className="relative h-[700vh]">
+    <div ref={trackRef} style={{ height: `${TRACK_VH}vh` }} className="relative">
       <div ref={stageRef} className="sticky top-0 h-svh w-full overflow-hidden bg-black">
         <canvas ref={canvasRef} className="absolute inset-0 h-full w-full opacity-0 transition-opacity duration-500" />
 
