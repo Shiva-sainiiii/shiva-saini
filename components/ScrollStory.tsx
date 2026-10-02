@@ -12,8 +12,11 @@ const CIRCLE_SIZE = 1500; // px, scale 1 pe diameter
 
 // SPEED KNOB: track jitna chhota, utna kam scroll me saare frames chalte hain.
 // 700 = bahut slow, 350 = fast (default), 250 = ekdum fast. Total scroll = TRACK_VH - 100vh.
-const TRACK_VH = 250;
-const SMOOTHING = 0.25; // 0.1 = dheere/silky, 0.25 = turant response
+
+
+
+const TRACK_VH = 350;   // 250 = ekdum fast, 450 = thoda slow
+const SMOOTHING = 0.16; // 0.25 = turant, 0.1 = silky
 
 const clamp = (v: number, min = 0, max = 1) => Math.min(max, Math.max(min, v));
 const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
