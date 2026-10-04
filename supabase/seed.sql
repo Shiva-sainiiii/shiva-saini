@@ -1,0 +1,43 @@
+-- Purane portfolio ka data. SQL Editor me Run karo.
+-- DHYAN: ye projects/skills/certificates ki existing rows replace kar deta hai.
+delete from projects; delete from skills; delete from certificates;
+
+insert into projects (title, description, tech, image, live_url, code_url, position) values ('Blog Website', 'Notes in the margins of an unfinished web. A blog where human writing meets AI, with honesty.', 'Cloudinary, supabase, Vercel, openrouter', 'https://res.cloudinary.com/prieeyyq/image/upload/v1783688917/cpztlliaahukjcgjolri.png', 'https://ai-blog-gamma-lyart.vercel.app/', 'https://github.com/Shiva-sainiiii/ai-blog', 0);
+insert into projects (title, description, tech, image, live_url, code_url, position) values ('Snake Rush', 'A fast-paced browser slither game with AI snakes that have real personalities — Aggressive, Coward, Hunter, Farmer — plus five distinct species from tiny Hatchlings to massive Anacondas. Built in vanilla JS with Canvas, zero frameworks.', 'Vercel, HTML, CSS, JS', 'https://res.cloudinary.com/prieeyyq/image/upload/v1783687845/ykc3k22ip6hfv5q90vku.jpg', 'https://snakerushgame.vercel.app/', 'https://github.com/Shiva-sainiiii/SnakeRush', 1);
+insert into projects (title, description, tech, image, live_url, code_url, position) values ('Restaurant Menu AI', 'An AI-powered menu generator using OpenRouter API with serverless functions and Firebase integration, deployed on Vercel.', 'JavaScript, OpenRouter, Firebase, Vercel', 'https://shivasainiportfolio.vercel.app/assets/project1.jpg', 'https://restaurant-menu-ai.vercel.app/', 'https://github.com/Shiva-sainiiii/Restaurant-Menu-Ai-', 2);
+insert into projects (title, description, tech, image, live_url, code_url, position) values ('Code Editor AI', 'A browser-based code editor with AI assistance, supporting multiple languages with live preview and smart suggestions.', 'HTML, CSS, JavaScript, AI API', 'https://shivasainiportfolio.vercel.app/assets/project2.jpg', 'https://codeagentai.vercel.app/', 'https://github.com/Shiva-sainiiii/Code-Editor-Ai', 3);
+insert into projects (title, description, tech, image, live_url, code_url, position) values ('Shanu AI Chatbot', 'A conversational AI chatbot with real-time responses and modern UI powered by OpenRouter models.', 'JavaScript, AI API, CSS', 'https://shivasainiportfolio.vercel.app/assets/project3.jpg', 'https://shanu-ai-chatbot.vercel.app/', 'https://github.com/Shiva-sainiiii/Shanu-Ai-', 4);
+insert into projects (title, description, tech, image, live_url, code_url, position) values ('Portfolio Website', 'A modern personal portfolio with animations, AI chat integration, Firebase backend, and deployed on Vercel.', 'HTML, CSS, JavaScript, Firebase', 'https://shivasainiportfolio.vercel.app/assets/project4.jpg', 'https://shivasainiportfolio.vercel.app/', 'https://github.com/Shiva-sainiiii/Shiva-Saini-Portfolio-', 5);
+insert into projects (title, description, tech, image, live_url, code_url, position) values ('AI Mind Trap', 'An interactive AI-based puzzle game that challenges user thinking with logic traps and smart responses.', 'JavaScript, Game Logic, AI', 'https://shivasainiportfolio.vercel.app/assets/project5.jpg', 'https://ai-mind-trap.vercel.app/', 'https://github.com/Shiva-sainiiii/Ai-Mind-Trap', 6);
+insert into projects (title, description, tech, image, live_url, code_url, position) values ('AI Teaching Assistant', 'An AI-based learning assistant supporting PDF/image upload and question answering for students.', 'JavaScript, AI, File Upload', 'https://shivasainiportfolio.vercel.app/assets/project6.jpg', 'https://ai-teaching-assistants.vercel.app/', 'https://github.com/Shiva-sainiiii/Ai-Teaching-Assistants-', 7);
+insert into projects (title, description, tech, image, live_url, code_url, position) values ('Weather Info', 'A weather application showing real-time weather data using APIs with a clean UI.', 'JavaScript, API, CSS', 'https://shivasainiportfolio.vercel.app/assets/project7.jpg', 'https://shiva-sainiiii.github.io/Weather-Info/', 'https://github.com/Shiva-sainiiii/Weather-Info', 8);
+insert into projects (title, description, tech, image, live_url, code_url, position) values ('Tic Tac Toe', 'A classic Tic Tac Toe game with interactive UI and smooth gameplay experience.', 'HTML, CSS, JavaScript', 'https://shivasainiportfolio.vercel.app/assets/project8.jpg', 'https://horrortictactoe.vercel.app/', 'https://github.com/Shiva-sainiiii/Tic-Tac-Toe', 9);
+insert into skills (name, position) values ('Canvas', 0);
+insert into skills (name, position) values ('HTML5', 1);
+insert into skills (name, position) values ('CSS3', 2);
+insert into skills (name, position) values ('JavaScript', 3);
+insert into skills (name, position) values ('React', 4);
+insert into skills (name, position) values ('GSAP', 5);
+insert into skills (name, position) values ('Tailwind CSS', 6);
+insert into skills (name, position) values ('Node.js', 7);
+insert into skills (name, position) values ('Python', 8);
+insert into skills (name, position) values ('Express.js', 9);
+insert into skills (name, position) values ('REST APIs', 10);
+insert into skills (name, position) values ('Serverless', 11);
+insert into skills (name, position) values ('Firebase', 12);
+insert into skills (name, position) values ('Vercel', 13);
+insert into skills (name, position) values ('Git & GitHub', 14);
+insert into skills (name, position) values ('VS Code', 15);
+insert into skills (name, position) values ('Figma', 16);
+insert into skills (name, position) values ('OpenRouter API', 17);
+insert into skills (name, position) values ('Prompt Engineering', 18);
+insert into skills (name, position) values ('Particles.js', 19);
+insert into skills (name, position) values ('SEO Basics', 20);
+insert into certificates (title, issuer, image, position) values ('Maincrafts technology', '', 'https://res.cloudinary.com/prieeyyq/image/upload/v1783257050/ukt3nipzfnmrrb4igtql.jpg', 0);
+insert into certificates (title, issuer, image, position) values ('Maincrafts technology', '', 'https://res.cloudinary.com/prieeyyq/image/upload/v1783688010/hixn4oq49uvrwgslvp7x.jpg', 1);
+insert into certificates (title, issuer, image, position) values ('Web Development Internship', 'OCTANET Pvt Ltd', 'https://shivasainiportfolio.vercel.app/assets/certificate1.jpg', 2);
+insert into certificates (title, issuer, image, position) values ('AI For Beginners', 'MICROSOFT', 'https://shivasainiportfolio.vercel.app/assets/certificate2.jpg', 3);
+insert into certificates (title, issuer, image, position) values ('Data Entry Operator', 'IT/ITes', 'https://shivasainiportfolio.vercel.app/assets/certificate3.jpg', 4);
+insert into certificates (title, issuer, image, position) values ('ADCA', 'Sunshine Campus', 'https://shivasainiportfolio.vercel.app/assets/certificate4.jpg', 5);
+insert into certificates (title, issuer, image, position) values ('CRM', 'IT/ITeS', 'https://shivasainiportfolio.vercel.app/assets/certificate5.jpg', 6);
+insert into certificates (title, issuer, image, position) values ('Web Development Internship', 'CODSOFT', 'https://shivasainiportfolio.vercel.app/assets/certificate6.jpg', 7);

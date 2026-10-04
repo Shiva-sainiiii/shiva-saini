@@ -24,9 +24,6 @@ export const PROJECTS = [
   { title: "Portfolio System", desc: "Portfolio with AI chat, live feedback and an owner-only admin panel." },
 ];
 
-// Project tags (admin me dropdown + site pe filter yahin se). Naya tag chahiye to bas yahan add karo.
-export const CATEGORIES = ["Web Game", "AI", "Website"] as const;
-
 export const SKILLS = [
   "Next.js", "React", "JavaScript", "Node.js", "Three.js", "Framer Motion",
   "AI Integration", "Firebase", "Python (Flask)", "Tailwind",

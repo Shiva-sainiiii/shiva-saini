@@ -13,3 +13,8 @@ html, body { background: #000; color: #fff; -webkit-font-smoothing: antialiased;
 .marquee { animation: marquee 45s linear infinite; }
 .marquee:hover { animation-play-state: paused; }
 @media (prefers-reduced-motion: reduce) { .marquee { animation: none; } }
+
+/* Laptop screen ka blinking block cursor */
+.typed::after { content: ""; display: inline-block; width: .55em; height: 1em; margin-left: 2px; vertical-align: -0.12em; background: currentColor; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .typed::after { animation: none; } }

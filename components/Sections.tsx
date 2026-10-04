@@ -1,10 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
 import { useContent } from "@/lib/content";
 import { EXPERIENCE, SITE } from "@/lib/data";
+import AskAI from "./AskAI";
 import Certificates from "./Certificates";
-import Chat from "./Chat";
 import Contact from "./Contact";
 import Feedback from "./Feedback";
 import Projects from "./Projects";
@@ -33,13 +32,7 @@ const Row = ({ title, note }: { title: string; note: string }) => (
 
 export default function Sections() {
   // Ek hi fetch, saare sections ko data milta hai
-  const { projects, skills, certificates, links, settings } = useContent();
-
-  // Chat section tabhi dikhta hai jab server pe GEMINI_API_KEY ho aur admin ne bot off na kiya ho
-  const [aiReady, setAiReady] = useState(false);
-  useEffect(() => {
-    fetch("/api/chat").then((r) => r.json()).then((d) => setAiReady(Boolean(d?.configured))).catch(() => {});
-  }, []);
+  const { projects, skills, certificates, links } = useContent();
   return (
     <div className="bg-black text-white">
       <Section id="about" title="About me">
@@ -56,19 +49,14 @@ export default function Sections() {
         <ul>{EXPERIENCE.map((e) => <Row key={e.company} title={e.company} note={`${e.role} · ${e.period}`} />)}</ul>
       </Section>
 
-      {aiReady && settings.chatbot_enabled !== "false" && (
-        <Section id="chat" title="Ask AI"><Chat greeting={settings.chatbot_greeting} name={settings.chatbot_name} /></Section>
-      )}
+      <Section id="ask-ai" title="Ask my AI"><AskAI /></Section>
 
       {db && <Section id="feedback" title="Feedback"><Feedback /></Section>}
       <Section id="contact" title="Contact">
         <Contact links={[...links, { id: "resume", label: "Resume", url: SITE.resume }]} />
       </Section>
 
-      <footer className="border-t border-white/10 px-6 py-10 text-center text-sm text-white/30">
-        © {new Date().getFullYear()} {SITE.name}
-        <a href="/admin" className="ml-4 text-white/15 transition-colors hover:text-white/50">Admin</a>
-      </footer>
+      <footer className="border-t border-white/10 px-6 py-10 text-center text-sm text-white/30">© {new Date().getFullYear()} {SITE.name}</footer>
     </div>
   );
 }

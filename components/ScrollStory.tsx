@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { FRAME_COUNT, startLoading } from "@/lib/frames";
 import { SITE } from "@/lib/data";
+import { startTypewriter } from "@/lib/typewriter";
 
 /* ---- Scroll phases (track ke andar 0..1 progress) ---- */
 const FRAMES_END = 0.75; // 0–75%  : frames play
@@ -12,11 +13,8 @@ const CIRCLE_SIZE = 1500; // px, scale 1 pe diameter
 
 // SPEED KNOB: track jitna chhota, utna kam scroll me saare frames chalte hain.
 // 700 = bahut slow, 350 = fast (default), 250 = ekdum fast. Total scroll = TRACK_VH - 100vh.
-
-
-
-const TRACK_VH = 350;   // 250 = ekdum fast, 450 = thoda slow
-const SMOOTHING = 0.16; // 0.25 = turant, 0.1 = silky
+const TRACK_VH = 350;
+const SMOOTHING = 0.16; // 0.1 = dheere/silky, 0.25 = turant response
 
 const clamp = (v: number, min = 0, max = 1) => Math.min(max, Math.max(min, v));
 const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
@@ -37,6 +35,41 @@ const CIRCLES = Array.from({ length: CIRCLE_COUNT }, () => ({
   delay: rand() * 0.4, // stagger: sab ek saath start nahi honge
 }));
 
+// Laptop screen pe loop me type hone wali lines — yahan se badal sakte ho
+const SCREEN_LINES = [
+  "const shiva = 'creative dev';",
+  "// coffee -> code -> magic",
+  "design.meets(AI);",
+  "npm run build:dreams",
+  "scroll down. let's build.",
+];
+
+type Box = { x0: number; x1: number; y0: number; y1: number };
+const probe = typeof document !== "undefined" ? document.createElement("canvas") : null;
+
+// Frame me cyan screen ka bounding box (image fractions me) dhoondta hai.
+// 192px ki chhoti copy pe row/column histogram — bokeh ke chhote cyan dhabbe ignore ho jaate hain.
+function findScreen(img: HTMLImageElement): Box | null {
+  const w = 192, h = Math.round((w * img.naturalHeight) / img.naturalWidth);
+  probe!.width = w; probe!.height = h;
+  const g = probe!.getContext("2d", { willReadFrequently: true })!;
+  g.drawImage(img, 0, 0, w, h);
+  const d = g.getImageData(0, 0, w, h).data;
+  const cols = new Array<number>(w).fill(0), rows = new Array<number>(h).fill(0);
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * 4;
+      if (d[i + 2] > 150 && d[i + 1] > 150 && d[i] < 150 && d[i + 1] - d[i] > 50) { cols[x]++; rows[y]++; }
+    }
+  const span = (a: number[]): [number, number] | null => {
+    const t = Math.max(...a) * 0.5;
+    if (t < 4) return null;
+    return [a.findIndex((v) => v >= t), a.length - 1 - [...a].reverse().findIndex((v) => v >= t)];
+  };
+  const cx = span(cols), ry = span(rows);
+  return cx && ry ? { x0: cx[0] / w, x1: (cx[1] + 1) / w, y0: ry[0] / h, y1: (ry[1] + 1) / h } : null;
+}
+
 const reveal = (el: HTMLElement | null, t: number) => {
   if (!el) return;
   el.style.opacity = String(t);
@@ -53,6 +86,8 @@ export default function ScrollStory() {
   const nameRef = useRef<HTMLHeadingElement>(null);
   const tagRef = useRef<HTMLParagraphElement>(null);
   const hintRef = useRef<HTMLDivElement>(null);
+  const screenRef = useRef<HTMLDivElement>(null);
+  const typedRef = useRef<HTMLParagraphElement>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current!;
@@ -64,9 +99,29 @@ export default function ScrollStory() {
     let trackTop = 0, range = 1;   // cached layout (scroll pe layout read nahi karte)
     let target = 0, current = 0;   // target = asli progress, current = smoothed
     let raf = 0, wanted = 0, drawn = -1;
+    const boxes = new Map<number, Box | null>(); // frame -> screen box cache
+    let screenOk = false;
 
     // Jo frame chahiye wo load nahi hua to sabse kareeb ka pehle wala frame dikhao
     const nearest = (i: number) => { for (let k = i; k >= 0; k--) if (frames[k]) return k; return -1; };
+
+    // Typing overlay ko frame ki cyan screen ke upar fit karta hai (canvas jaisi hi cover math)
+    const place = (img: HTMLImageElement, k: number) => {
+      if (!boxes.has(k)) boxes.set(k, findScreen(img));
+      const f = boxes.get(k);
+      const el = screenRef.current;
+      screenOk = !!f;
+      if (!f || !el) return;
+      const cw = canvas.clientWidth, ch = canvas.clientHeight;
+      const sc = Math.max(cw / img.naturalWidth, ch / img.naturalHeight);
+      const dw = img.naturalWidth * sc, dh = img.naturalHeight * sc;
+      const w = (f.x1 - f.x0) * dw;
+      Object.assign(el.style, {
+        left: `${(cw - dw) / 2 + f.x0 * dw}px`, top: `${(ch - dh) / 2 + f.y0 * dh}px`,
+        width: `${w}px`, height: `${(f.y1 - f.y0) * dh}px`,
+        fontSize: `${Math.max(10, w * 0.05)}px`, padding: `${w * 0.06}px`,
+      });
+    };
 
     // "Cover" fit: image poori screen bhare, bina stretch ke (center crop)
     const paint = () => {
@@ -76,6 +131,7 @@ export default function ScrollStory() {
       const s = Math.max(canvas.width / img.naturalWidth, canvas.height / img.naturalHeight);
       const w = img.naturalWidth * s, h = img.naturalHeight * s;
       ctx.drawImage(img, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+      place(img, k);
       drawn = k;
       canvas.style.opacity = "1"; // pehla frame aate hi soft fade-in (koi loader nahi)
     };
@@ -99,6 +155,8 @@ export default function ScrollStory() {
       reveal(nameRef.current, clamp((p - CIRCLES_END) / 0.05));
       reveal(tagRef.current, clamp((p - CIRCLES_END - 0.03) / 0.05));
       if (hintRef.current) hintRef.current.style.opacity = String(1 - clamp(p / 0.04));
+      // Typing text zoom ke saath screen pe chipka rehta hai, phir fade-out (frames ke 40–65% pe)
+      if (screenRef.current) screenRef.current.style.opacity = screenOk ? String(1 - clamp((p / FRAMES_END - 0.4) / 0.25)) : "0";
     };
 
     const progress = () => clamp((window.scrollY - trackTop) / range);
@@ -131,10 +189,12 @@ export default function ScrollStory() {
 
     measure();
     const stopLoading = startLoading(frames, paint); // background me, bina rukawat
+    const stopTyping = typedRef.current ? startTypewriter(typedRef.current, SCREEN_LINES) : () => {};
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", measure);
     return () => {
       stopLoading();
+      stopTyping();
       cancelAnimationFrame(raf);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", measure);
@@ -146,6 +206,11 @@ export default function ScrollStory() {
     <div ref={trackRef} style={{ height: `${TRACK_VH}vh` }} className="relative">
       <div ref={stageRef} className="sticky top-0 h-svh w-full overflow-hidden bg-black">
         <canvas ref={canvasRef} className="absolute inset-0 h-full w-full opacity-0 transition-opacity duration-500" />
+
+        {/* Laptop screen pe typing effect — position/size findScreen() se aata hai */}
+        <div ref={screenRef} aria-hidden="true" className="pointer-events-none absolute overflow-hidden font-mono leading-snug text-[#032a33] opacity-0">
+          <p ref={typedRef} className="typed whitespace-pre-wrap break-words" />
+        </div>
 
         {CIRCLES.map((c, i) => (
           <div

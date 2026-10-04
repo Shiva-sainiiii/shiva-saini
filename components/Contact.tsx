@@ -35,7 +35,7 @@ export default function Contact({ links }: { links: LinkItem[] }) {
         <button disabled={status === "sending"} className="rounded-full bg-white px-6 py-3 text-sm font-medium text-black disabled:opacity-50">
           {status === "sending" ? "Sending…" : "Send message"}
         </button>
-        {status === "done" && <p className="text-sm text-white/60">Message sent. I'll get back to you soon.</p>}
+        {status === "done" && <p className="text-sm text-white/60">Message sent. I will get back to you soon.</p>}
         {status === "error" && <p className="text-sm text-red-400">Could not send. Please email me directly.</p>}
       </form>
 
